@@ -8,14 +8,26 @@ const axiosGitHubGraphQL = axios.create({
   }
 });
 const TITLE = 'React GraphQL GitHub Client';
-const GET_ORGANIZATION = `
+const GET_REPOSITORY_OF_ORGANIZATION = `
 {
   organization(login: "the-road-to-learn-react") {
     name
     url
+    repository(name: "the-road-to-learn-react") {
+      name
+      url
+    }
   }
 }
 `;
+const Repository = ({ repository }) => (
+  <div>
+    <p>
+      <strong>In Repository:</strong>
+      <a href={repository.url}>{repository.name}</a>
+    </p>
+  </div>
+);
 const Organization = ({ organization, errors }) => {
   if (errors) {
     return (
@@ -31,6 +43,7 @@ const Organization = ({ organization, errors }) => {
         <strong>Issues from Organization:</strong>
         <a href={organization.url}>{organization.name}</a>
       </p>
+      <Repository repository={organization.repository} />
     </div>
   );
 };
@@ -53,12 +66,14 @@ class App extends Component {
     event.preventDefault();
   };
   onFetchFromGitHub = () => {
-    axiosGitHubGraphQL.post('', { query: GET_ORGANIZATION }).then((result) =>
-      this.setState(() => ({
-        organization: result.data.data.organization,
-        errors: result.data.errors
-      }))
-    );
+    axiosGitHubGraphQL
+      .post('', { query: GET_REPOSITORY_OF_ORGANIZATION })
+      .then((result) =>
+        this.setState(() => ({
+          organization: result.data.data.organization,
+          errors: result.data.errors
+        }))
+      );
   };
 
   render() {
