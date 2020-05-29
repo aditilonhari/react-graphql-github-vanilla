@@ -1,83 +1,8 @@
 import React, { Component } from 'react';
-import axios from 'axios';
-
-const axiosGitHubGraphQL = axios.create({
-  baseURL: 'https://api.github.com/graphql',
-  headers: {
-    Authorization: `bearer ${process.env.REACT_APP_GITHUB_PERSONAL_ACCESS_TOKEN}`
-  }
-});
-const getIssuesOfRepository = (path) => {
-  const [organization, repository] = path.split('/');
-  return axiosGitHubGraphQL.post('', {
-    query: GET_ISSUES_OF_REPOSITORY,
-    variables: { organization, repository }
-  });
-};
-const resolveIssuesQuery = (queryResult) => () => ({
-  organization: queryResult.data.data.organization,
-  errors: queryResult.data.errors
-});
+import Organization from './components/Organization';
+import { getIssuesOfRepository, resolveIssuesQuery } from './data/graphql';
 
 const TITLE = 'React GraphQL GitHub Client';
-const GET_ISSUES_OF_REPOSITORY = `
-query ($organization: String!, $repository: String!) {
-organization(login: $organization) {
-    name
-    url
-    repository(name: $repository) {
-      name
-      url
-      issues(last: 5) {
-        edges {
-          node {
-            id
-            title
-            url
-          }
-        }
-      }
-    }
-  }
-}
-`;
-const Repository = ({ repository }) => (
-  <div>
-    <p>
-      <strong>In Repository:</strong>
-      <a href={repository.url}>{repository.name}</a>
-      <p>
-        <strong>Issues in Repository:</strong>
-      </p>
-      <ul>
-        {repository.issues.edges.map((issue) => (
-          <li key={issue.node.id}>
-            <a href={issue.node.url}>{issue.node.title}</a>
-          </li>
-        ))}
-      </ul>
-    </p>
-  </div>
-);
-const Organization = ({ organization, errors }) => {
-  if (errors) {
-    return (
-      <p>
-        <strong>Something went wrong:</strong>
-        {errors.map((error) => error.message).join(' ')}
-      </p>
-    );
-  }
-  return (
-    <div>
-      <p>
-        <strong>Issues from Organization:</strong>
-        <a href={organization.url}>{organization.name}</a>
-      </p>
-      <Repository repository={organization.repository} />
-    </div>
-  );
-};
 
 class App extends Component {
   state = {
