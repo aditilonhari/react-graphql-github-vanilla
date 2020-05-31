@@ -19,14 +19,19 @@ class App extends Component {
   };
   onSubmit = (event) => {
     // fetch data
+    // cursor parameter will be undefined here (initial page load)
     this.onFetchFromGitHub(this.state.path);
     event.preventDefault();
   };
 
-  onFetchFromGitHub = (path) => {
-    getIssuesOfRepository(path).then((queryResult) =>
-      this.setState(resolveIssuesQuery(queryResult))
+  onFetchFromGitHub = (path, cursor) => {
+    getIssuesOfRepository(path, cursor).then((queryResult) =>
+      this.setState(resolveIssuesQuery(queryResult, cursor))
     );
+  };
+  onFetchMoreIssues = () => {
+    const { endCursor } = this.state.organization.repository.issues.pageInfo;
+    this.onFetchFromGitHub(this.state.path, endCursor);
   };
 
   render() {
@@ -48,7 +53,11 @@ class App extends Component {
         </form>
         <hr />
         {organization ? (
-          <Organization organization={organization} errors={errors} />
+          <Organization
+            organization={organization}
+            errors={errors}
+            onFetchMoreIssues={this.onFetchMoreIssues}
+          />
         ) : (
           <p>No information yet ...</p>
         )}

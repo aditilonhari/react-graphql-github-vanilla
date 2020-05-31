@@ -7,33 +7,71 @@ const axiosGitHubGraphQL = axios.create({
   }
 });
 
-export const getIssuesOfRepository = (path) => {
+export const getIssuesOfRepository = (path, cursor) => {
   const [organization, repository] = path.split('/');
   return axiosGitHubGraphQL.post('', {
     query: GET_ISSUES_OF_REPOSITORY,
-    variables: { organization, repository }
+    variables: { organization, repository, cursor }
   });
 };
-export const resolveIssuesQuery = (queryResult) => () => ({
-  organization: queryResult.data.data.organization,
-  errors: queryResult.data.errors
-});
+export const resolveIssuesQuery = (queryResult, cursor) => (state) => {
+  const { data, errors } = queryResult.data;
+  if (!cursor) {
+    return {
+      organization: data.organization,
+      errors
+    };
+  }
+  const { edges: oldIssues } = state.organization.repository.issues;
+  const { edges: newIssues } = data.organization.repository.issues;
+  const updatedIssues = [...oldIssues, ...newIssues];
+
+  return {
+    organization: {
+      ...data.organization,
+      repository: {
+        ...data.organization.repository,
+        issues: {
+          ...data.organization.repository.issues,
+          edges: updatedIssues
+        }
+      }
+    },
+    errors
+  };
+};
 
 const GET_ISSUES_OF_REPOSITORY = `
-query ($organization: String!, $repository: String!) {
+query (
+  $organization: String!, 
+  $repository: String!, 
+  $cursor: String) {
 organization(login: $organization) {
     name
     url
     repository(name: $repository) {
       name
       url
-      issues(last: 5) {
+      issues(first: 5, after: $cursor, states: [OPEN]) {
         edges {
           node {
             id
             title
             url
+            reactions(last: 3) {
+              edges {
+                node {
+                  id
+                  content
+                }
+              }
+            }
           }
+        }
+        totalCount
+        pageInfo {
+          endCursor
+          hasNextPage
         }
       }
     }
