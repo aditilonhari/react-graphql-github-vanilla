@@ -1,25 +1,25 @@
 import React from 'react';
+import IssueList from './IssueList';
 
-const Repository = ({ repository }) => (
+const Repository = ({ repository, onStarRepository }) => (
   <div>
     <p>
       <strong>In Repository:</strong>
       <a href={repository.url}>{repository.name}</a>
+      <button
+        type='button'
+        onClick={() =>
+          onStarRepository(repository.id, repository.viewerHasStarred)
+        }
+      >
+        {repository.stargazers.totalCount}
+        {'-'}
+        {repository.viewerHasStarred ? ' Unstar' : ' Star'}
+      </button>
       <p>
         <strong>Issues in Repository:</strong>
       </p>
-      <ul>
-        {repository.issues.edges.map((issue) => (
-          <li key={issue.node.id}>
-            <a href={issue.node.url}>{issue.node.title}</a>
-            <ul>
-              {issue.node.reactions.edges.map((reaction) => (
-                <li key={reaction.node.id}>{reaction.node.content}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      <IssueList repository={repository} />
     </p>
   </div>
 );

@@ -1,6 +1,13 @@
 import React, { Component } from 'react';
 import Organization from './components/Organization';
-import { getIssuesOfRepository, resolveIssuesQuery } from './data/graphql';
+import {
+  getIssuesOfRepository,
+  resolveIssuesQuery,
+  addStarToRepository,
+  resolveAddStarMutation,
+  removeStarFromRepository,
+  resolveRemoveStarMutation
+} from './data/backend_api';
 
 const TITLE = 'React GraphQL GitHub Client';
 
@@ -34,6 +41,18 @@ class App extends Component {
     this.onFetchFromGitHub(this.state.path, endCursor);
   };
 
+  onStarRepository = (repositoryId, viewerHasStarred) => {
+    if (viewerHasStarred) {
+      removeStarFromRepository(repositoryId).then((mutationResult) =>
+        this.setState(resolveRemoveStarMutation(mutationResult))
+      );
+    } else {
+      addStarToRepository(repositoryId).then((mutationResult) =>
+        this.setState(resolveAddStarMutation(mutationResult))
+      );
+    }
+  };
+
   render() {
     const { path, organization, errors } = this.state;
 
@@ -57,6 +76,7 @@ class App extends Component {
             organization={organization}
             errors={errors}
             onFetchMoreIssues={this.onFetchMoreIssues}
+            onStarRepository={this.onStarRepository}
           />
         ) : (
           <p>No information yet ...</p>
